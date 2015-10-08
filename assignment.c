@@ -14,4 +14,12 @@ void fun_with_threads(void* arg){
 
 void thread_wrap(){
 	current_thread->initial_function(current_thread->initial_argument);
+	yield();
+};
+
+void yield(){
+	struct thread* temp = current_thread;
+	current_thread = inactive_thread;
+	inactive_thread = temp;
+	thread_switch(inactive_thread, current_thread);
 };

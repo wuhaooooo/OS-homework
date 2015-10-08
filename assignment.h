@@ -17,3 +17,5 @@ void thread_switch(struct thread* old, struct thread* new);
 void thread_start(struct thread * old, struct thread * new);
 
 void thread_wrap();
+
+void yield();
