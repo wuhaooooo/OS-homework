@@ -1,9 +1,11 @@
-#include "assignment.h"
+#include "context_switch.h"
 
 extern struct thread* current_thread;
 extern struct thread* inactive_thread;
 
 int factorial(int n){
+	yield();
+	printf("factorial is called %d\n", n);
 	return n == 0 ? 1 : n * factorial(n-1);
 };
 
@@ -14,7 +16,9 @@ void fun_with_threads(void* arg){
 
 void thread_wrap(){
 	current_thread->initial_function(current_thread->initial_argument);
-	yield();
+	while(1){
+		yield();
+	}
 };
 
 void yield(){

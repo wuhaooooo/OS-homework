@@ -1,4 +1,4 @@
-#include "assignment.c"
+#include "context_switch.c"
 
 struct thread* current_thread;
 struct thread* inactive_thread;
@@ -14,9 +14,10 @@ int main(){
 	*p = 5;
 	current_thread->initial_argument = p;
 	current_thread->stack_pointer = malloc(STACK_SIZE) + STACK_SIZE;
-	//current_thread->initial_function(current_thread->initial_argument);
 
 	thread_start(inactive_thread, current_thread);
+	factorial(8);
+
 
 
 	return 0;
