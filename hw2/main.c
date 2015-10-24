@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "queue.h"
 #include <stdio.h>
 
 void print_nth_prime(void * pn) {

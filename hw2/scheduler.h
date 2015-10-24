@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #define STACK_SIZE 1024*1024
+extern struct thread * current_thread;
 
 typedef enum {
     RUNNING, // The thread is currently running.
@@ -15,10 +16,6 @@ struct thread {
 	void* initial_argument;
 	state_t state;	
 };
-
-extern struct thread * current_thread;
-
-
 
 void scheduler_begin();
 void thread_fork(void(*target)(void*), void* arg);
