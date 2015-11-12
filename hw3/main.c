@@ -1,6 +1,8 @@
 #include "scheduler.h"
 #include "queue.h"
 #include <stdio.h>
+#include <fcntl.h>
+
 
 void print_nth_prime(void * pn) {
   int n = *(int *) pn;
@@ -23,14 +25,33 @@ void print_nth_prime(void * pn) {
  
 }
 
+void read_file(){
+  int fd = open("test.txt", O_RDONLY);
+  if(fd == -1){
+    printf("file open error!\n");
+    return;
+  }
+  int buffer_size = 4;
+  char buffer[buffer_size];
+  while(read_wrap(fd, buffer, buffer_size) != 0){
+    printf("%s\n", buffer);
+  }
+  printf("file read finished!\n");
+}
+
+void read_IO(){
+  int buffer_size = 4;
+  char buffer[buffer_size];
+  printf("Input something!\n");
+  read_wrap(0, buffer, buffer_size);
+  printf("Here is the input: %s\n", buffer);
+}
 
 int main(void) {
   scheduler_begin();
 
-  int n1 = 20000, n2 = 10000, n3 = 30000;
-  thread_fork(print_nth_prime, &n1);
-  thread_fork(print_nth_prime, &n2);
-  thread_fork(print_nth_prime, &n3);
+  thread_fork(read_IO, NULL);
+  thread_fork(read_file, NULL);
 
   scheduler_end();
 }
