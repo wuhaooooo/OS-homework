@@ -52,6 +52,7 @@ int main(void) {
 
   thread_fork(read_IO, NULL);
   thread_fork(read_file, NULL);
-
+  int a = 100;
+  thread_fork(print_nth_prime, &a);
   scheduler_end();
 }

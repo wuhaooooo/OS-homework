@@ -42,9 +42,9 @@ ssize_t read_wrap(int fd, void* buf, size_t count){
 	int read_return = aio_read(my_aiocb);
 
 	while(aio_error(my_aiocb) == EINPROGRESS){
-		sleep(1);
+		
 		yield();
-		printf("\npolling\n");
+
 	}
 
 	int value_return = aio_return(my_aiocb);
