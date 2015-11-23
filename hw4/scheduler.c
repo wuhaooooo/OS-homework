@@ -1,5 +1,5 @@
 #include "scheduler.h"
-#include "queue.h"
+
 struct thread * current_thread;
 struct queue ready_list;
 /*
@@ -22,7 +22,7 @@ struct thread {
 // it is pulling the next thread to run off of the ready list instead of creating it. yield should:
 void yield(){
 	// If the current thread is not DONE, set its state to READY and enqueue it on the ready list.
-	if(current_thread->state != DONE){
+	if(current_thread->state != DONE && current_thread->state != BLOCKED){
 		current_thread->state = READY;
 		thread_enqueue(&ready_list, current_thread);
 	}
@@ -57,7 +57,8 @@ void thread_fork(void(*target)(void*), void* arg) {
 	new_thread->initial_function = target;
 	new_thread->initial_argument = arg;
 	// 	Set the current thread's state to READY and enqueue it on the ready list.
-	current_thread->state = READY;
+	if(current_thread->state != BLOCKED)
+		current_thread->state = READY;
 	thread_enqueue(&ready_list, current_thread);
 	// Set the new thread's state to RUNNING.
 	new_thread->state = RUNNING;
@@ -78,3 +79,40 @@ void scheduler_end(){
 		yield();
 	}
 };
+
+
+void mutex_init(struct mutex * m){
+	m->held = 0;
+	m->waiting_threads.head = NULL;
+	m->waiting_threads.tail = NULL;
+};
+
+void mutex_lock(struct mutex * m){
+	if(m->held == 1){
+		current_thread->state = BLOCKED;
+		thread_enqueue(&m->waiting_threads, current_thread);
+		yield();
+	}else
+		m->held = 1;
+};
+
+void mutex_unlock(struct mutex * m){
+	if(is_empty(&m->waiting_threads)){
+		m->held = 0;
+	}else{
+		struct thread* temp = thread_dequeue(&m->waiting_threads);
+		if(temp){
+			temp->state = READY;
+			thread_enqueue(&ready_list, temp);
+		}
+	}
+};
+/*
+
+
+void condition_init(struct condition *){};
+void condition_wait(struct condition *, struct mutex *){};
+void condition_signal(struct condition *){};
+void condition_broadcast(struct condition *){};
+
+*/
