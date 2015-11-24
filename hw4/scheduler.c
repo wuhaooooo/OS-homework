@@ -49,7 +49,7 @@ void scheduler_begin(){
 	ready_list.tail = NULL;
 };
 
-void thread_fork(void(*target)(void*), void* arg) {
+struct thread* thread_fork(void(*target)(void*), void* arg) {
 	// allocate a new thread control block and stack
 	struct thread* new_thread = malloc(sizeof(struct thread));
 	new_thread->stack_pointer = malloc(STACK_SIZE) + STACK_SIZE;
@@ -62,11 +62,18 @@ void thread_fork(void(*target)(void*), void* arg) {
 	thread_enqueue(&ready_list, current_thread);
 	// Set the new thread's state to RUNNING.
 	new_thread->state = RUNNING;
+	// allocate mutex lock and condition
+	new_thread->mutexLock = malloc(sizeof(struct mutex));
+	new_thread->condList = malloc(sizeof(struct condition));
+	mutex_init(&new_thread->mutexLock);
+	condition_init(&new_thread->condList);
 	// Save a pointer to the current thread in a temporary variable, then set the current thread to the new thread.
 	struct thread* temp = current_thread;
 	current_thread = new_thread;
 	// Call thread_start with the old current thread as old and the new current thread as new.
 	thread_start(temp, current_thread);
+
+	return current_thread;
 };
 
 /*Finally, recall from the first assignment that we need a way 
@@ -107,12 +114,36 @@ void mutex_unlock(struct mutex * m){
 		}
 	}
 };
-/*
 
 
-void condition_init(struct condition *){};
-void condition_wait(struct condition *, struct mutex *){};
-void condition_signal(struct condition *){};
-void condition_broadcast(struct condition *){};
+void condition_init(struct condition* c){
+	c->waiting_threads.head = NULL;
+	c->waiting_threads.tail = NULL;
+};
 
-*/
+void condition_wait(struct condition* c, struct mutex* m){
+	mutex_lock(&m);
+	current_thread->state = BLOCKED;
+	thread_enqueue(&c->waiting_threads, current_thread);
+	mutex_unlock(&m);
+	yield();
+};
+
+void condition_signal(struct condition* c){
+	struct thread* ready_thread = thread_dequeue(&c->waiting_threads);
+	if(ready_thread){
+		ready_thread->state = READY;
+		thread_enqueue(&ready_list, ready_thread);
+	}
+};
+
+void condition_broadcast(struct condition* c){
+	struct thread* ready_thread = thread_dequeue(&c->waiting_threads);
+	while(ready_thread){
+		ready_thread->state = READY;
+		thread_enqueue(&ready_list, ready_thread);
+		ready_thread = thread_dequeue(&c->waiting_threads);
+	}
+};
+
+

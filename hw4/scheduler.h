@@ -21,33 +21,32 @@ struct thread {
 	void (*initial_function)(void*);
 	void* initial_argument;
 	state_t state;	
+	struct mutex mutexLock;
+	struct condition condList;
 };
 
 struct mutex {
 	int held;
 	struct queue waiting_threads;
 };
-/*
 
 struct condition {
 	struct queue waiting_threads;
 };
-*/
+
 
 void scheduler_begin();
-void thread_fork(void(*target)(void*), void* arg);
+struct thread* thread_fork(void(*target)(void*), void* arg);
 void yield();
 void scheduler_end();
-
 void mutex_init(struct mutex *);
 void mutex_lock(struct mutex *);
 void mutex_unlock(struct mutex *);
 
-/*
+
 
 void condition_init(struct condition *);
 void condition_wait(struct condition *, struct mutex *);
 void condition_signal(struct condition *);
 void condition_broadcast(struct condition *);
 
-*/
