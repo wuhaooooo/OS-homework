@@ -2,21 +2,6 @@
 
 struct thread * current_thread;
 struct queue ready_list;
-/*
-typedef enum {
-    RUNNING, // The thread is currently running.
-    READY,   // The thread is not running, but is runnable.
-    BLOCKED, // The thread is not running, and not runnable.
-    DONE     // The thread has finished. 
-} state_t;
-
-struct thread {
-	unsigned char* stack_pointer;
-	void (*initial_function)(void*);
-	void* initial_argument;
-	state_t state;	
-};
-*/
 
 // yield is very similar to thread_fork, with the main difference being that 
 // it is pulling the next thread to run off of the ready list instead of creating it. yield should:
@@ -39,6 +24,7 @@ void yield(){
 void thread_wrap(){
 	current_thread->initial_function(current_thread->initial_argument);
 	current_thread->state = DONE;
+	condition_signal(current_thread->condList);
 	yield();
 };
 
@@ -65,15 +51,15 @@ struct thread* thread_fork(void(*target)(void*), void* arg) {
 	// allocate mutex lock and condition
 	new_thread->mutexLock = malloc(sizeof(struct mutex));
 	new_thread->condList = malloc(sizeof(struct condition));
-	mutex_init(&new_thread->mutexLock);
-	condition_init(&new_thread->condList);
+	mutex_init(new_thread->mutexLock);
+	condition_init(new_thread->condList);
 	// Save a pointer to the current thread in a temporary variable, then set the current thread to the new thread.
 	struct thread* temp = current_thread;
 	current_thread = new_thread;
 	// Call thread_start with the old current thread as old and the new current thread as new.
 	thread_start(temp, current_thread);
 
-	return current_thread;
+	return new_thread;
 };
 
 /*Finally, recall from the first assignment that we need a way 
@@ -122,11 +108,11 @@ void condition_init(struct condition* c){
 };
 
 void condition_wait(struct condition* c, struct mutex* m){
-	mutex_lock(&m);
+	mutex_unlock(m);
 	current_thread->state = BLOCKED;
 	thread_enqueue(&c->waiting_threads, current_thread);
-	mutex_unlock(&m);
 	yield();
+	mutex_lock(m);
 };
 
 void condition_signal(struct condition* c){
@@ -145,5 +131,15 @@ void condition_broadcast(struct condition* c){
 		ready_thread = thread_dequeue(&c->waiting_threads);
 	}
 };
+
+
+void thread_join(struct thread* target){
+	mutex_lock(target->mutexLock);
+	if(target->state != DONE){
+		condition_wait(target->condList, target->mutexLock);
+	}else
+		condition_broadcast(target->condList);
+}
+
 
 

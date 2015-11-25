@@ -16,14 +16,6 @@ typedef enum {
     DONE     // The thread has finished. 
 } state_t;
 
-struct thread {
-	unsigned char* stack_pointer;
-	void (*initial_function)(void*);
-	void* initial_argument;
-	state_t state;	
-	struct mutex mutexLock;
-	struct condition condList;
-};
 
 struct mutex {
 	int held;
@@ -33,6 +25,17 @@ struct mutex {
 struct condition {
 	struct queue waiting_threads;
 };
+
+struct thread {
+	unsigned char* stack_pointer;
+	void (*initial_function)(void*);
+	void* initial_argument;
+	state_t state;	
+	struct mutex* mutexLock;
+	struct condition* condList;
+};
+
+
 
 
 void scheduler_begin();
@@ -49,4 +52,6 @@ void condition_init(struct condition *);
 void condition_wait(struct condition *, struct mutex *);
 void condition_signal(struct condition *);
 void condition_broadcast(struct condition *);
+
+void thread_join(struct thread* target);
 
