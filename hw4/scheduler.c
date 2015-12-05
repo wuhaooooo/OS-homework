@@ -22,9 +22,11 @@ void yield(){
 };
 
 void thread_wrap(){
+	mutex_lock(current_thread->mutexLock);
 	current_thread->initial_function(current_thread->initial_argument);
 	current_thread->state = DONE;
-	condition_signal(current_thread->condList);
+	mutex_unlock(current_thread->mutexLock);
+	condition_broadcast(current_thread->condList);
 	yield();
 };
 
@@ -137,8 +139,8 @@ void thread_join(struct thread* target){
 	mutex_lock(target->mutexLock);
 	if(target->state != DONE){
 		condition_wait(target->condList, target->mutexLock);
-	}else
-		condition_broadcast(target->condList);
+	}
+	mutex_unlock(target->mutexLock);
 }
 
 
